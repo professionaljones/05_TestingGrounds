@@ -3,7 +3,7 @@
 #include "S05_TestingGrounds.h"
 #include "Tile.h"
 #include "DrawDebugHelpers.h"
-#include "EngineUtils.h"
+#include "ActorPool.h"
 
 // Sets default values
 ATile::ATile()
@@ -15,18 +15,35 @@ ATile::ATile()
 
 void ATile::SetPool(UActorPool* InPool)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[%s] Setting Pool %s"), *(this->GetName()), *(InPool->GetName()));
 	Pool = InPool;
+
+	PositionNavMeshBoundsVolume();
 }
 
-void ATile::PlaceActors(TSubclassOf<AActor> ToSpawn, int MinSpawn, int MaxSpawn, float Radius)
+void ATile::PositionNavMeshBoundsVolume()
+{
+	NavMeshBoundsVolume = Pool->Checkout();
+	if (NavMeshBoundsVolume == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not enough actors in pool."));
+		return;
+	}
+	NavMeshBoundsVolume->SetActorLocation(GetActorLocation());
+}
+
+
+void ATile::PlaceActors(TSubclassOf<AActor> ToSpawn, int MinSpawn, int MaxSpawn, float Radius, float MinScale, float MaxScale)
 {
 	int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
 	for (size_t i = 0; i < NumberToSpawn; i++)
 	{
 		FVector SpawnPoint;
-		bool found = FindEmptyLocation(SpawnPoint, Radius);
+		float RandomScale = FMath::RandRange(MinScale, MaxScale);
+		bool found = FindEmptyLocation(SpawnPoint, Radius * RandomScale);
 		if (found) {
-			PlaceActor(ToSpawn, SpawnPoint);
+			float RandomRotation = FMath::RandRange(-180.f, 180.f);
+			PlaceActor(ToSpawn, SpawnPoint, RandomRotation, RandomScale);
 		}
 	}
 }
@@ -48,11 +65,13 @@ bool ATile::FindEmptyLocation(FVector& OutLocation, float Radius)
 	return false;
 }
 
-void ATile::PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint)
+void ATile::PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint, float Rotation, float Scale)
 {
 	AActor* Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn);
 	Spawned->SetActorRelativeLocation(SpawnPoint);
 	Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	Spawned->SetActorRotation(FRotator(0, Rotation, 0));
+	Spawned->SetActorScale3D(FVector(Scale));
 }
 
 
@@ -60,15 +79,11 @@ void ATile::PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint)
 void ATile::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	TActorIterator<AActor>ActorIterator = TActorIterator<AActor>(GetWorld());
-	while (ActorIterator)
-	{
-		AActor* FoundActor = *ActorIterator;
-		UE_LOG(LogTemp, Warning, TEXT("Found Actor: %s"), *FoundActor->GetName());
-		++ActorIterator;
-
-	}
+void ATile::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Pool->Return(NavMeshBoundsVolume);
 }
 
 // Called every frame
