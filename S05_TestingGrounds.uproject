@@ -43,6 +43,14 @@
 		{
 			"Name": "OculusVR",
 			"Enabled": false
+		},
+		{
+			"Name": "SteamController",
+			"Enabled": true
+		},
+		{
+			"Name": "WindowsDeviceProfileSelector",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
