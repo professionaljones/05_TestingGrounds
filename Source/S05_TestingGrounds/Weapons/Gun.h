@@ -48,5 +48,18 @@ public:
 	/** Fires a projectile. */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void OnFire();
+
+	/** Reloads the weapon */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+		void OnReload();
+
+	/** AnimMontages to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* ReloadAnimation1P;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* ReloadAnimation3P;
+
+	class UAnimInstance* ReloadAnimInstance1P;
+	class UAnimInstance* ReloadAnimInstance3P;
 	
 };

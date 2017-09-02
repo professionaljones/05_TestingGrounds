@@ -71,3 +71,25 @@ void AGun::OnFire()
 	}
 
 }
+
+void AGun::OnReload()
+{
+
+
+
+	// try and play the sound if specified
+	if (FireSound != NULL)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	}
+
+	// try and play a firing animation if specified
+	if (ReloadAnimation1P != nullptr && ReloadAnimInstance1P != nullptr)
+	{
+		ReloadAnimInstance1P->Montage_Play(ReloadAnimation1P, 1.f);
+	}
+	if (ReloadAnimation3P != nullptr && ReloadAnimInstance3P != nullptr)
+	{
+		ReloadAnimInstance3P->Montage_Play(FireAnimation3P, 1.f);
+	}
+}
