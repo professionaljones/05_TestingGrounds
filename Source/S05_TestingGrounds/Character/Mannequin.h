@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "Pickup.h"
 #include "GameFramework/Character.h"
 #include "Mannequin.generated.h"
 
@@ -17,6 +17,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+		float RaycastRange = 250.0f;
 
 public:
 	// Called every frame
@@ -47,5 +50,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	AGun* Gun;
+
+	/*Raycasts in front of the character to find usable items*/
+	void Raycast();
+
+	/*Reference to the last seen pickup item. Nullptr if none*/
+	APickup* LastItemSeen;
 
 };
