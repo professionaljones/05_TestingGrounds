@@ -2,6 +2,7 @@
 
 #include "S05_TestingGrounds.h"
 #include "Mannequin.h"
+#include "MyPlayerController.h"
 #include "../Weapons/Gun.h"
 
 
@@ -55,6 +56,17 @@ void AMannequin::BeginPlay()
 		InputComponent->BindAction("Fire", IE_Pressed, this, &AMannequin::PullTrigger);
 		InputComponent->BindAction("Reload", IE_Pressed, this, &AMannequin::ReloadWeapon);
 		InputComponent->BindAction("Activate", IE_Pressed, this, &AMannequin::PickupItem);
+		InputComponent->BindAction("Drop Item", IE_Pressed, this, &AMannequin::DropEquippedItem);
+		
+		FInputActionBinding InventoryBinding;
+		//We need this bind to execute on pause state
+		InventoryBinding.bExecuteWhenPaused = true;
+		InventoryBinding.ActionDelegate.BindDelegate(this, FName("HandleInventoryInput"));
+		InventoryBinding.ActionName = FName("Inventory");
+		InventoryBinding.KeyEvent = IE_Pressed;
+
+		//Binding the Inventory action
+		InputComponent->AddActionBinding(InventoryBinding);
 	}
 
 	//Initializing our reference
@@ -143,5 +155,61 @@ void AMannequin::PickupItem()
 			LastItemSeen->Destroy();
 		}
 		else GLog->Log("You can't carry any more items!");
+	}
+}
+
+void AMannequin::HandleInventoryInput()
+{
+	AMyPlayerController* Con = Cast<AMyPlayerController>(GetController());
+	if (Con) Con->HandleInventoryInput();
+}
+
+void AMannequin::SetEquippedItem(UTexture2D * Texture)
+{
+	if (Texture)
+	{
+		//For this scenario we make the assumption that
+		//every pickup has a unique texture.
+		//So, in order to set the equipped item we just check every item
+		//inside our Inventory. Once we find an item that has the same image as the
+		//Texture image we're passing as a parameter we mark that item as CurrentlyEquipped.
+		for (auto It = Inventory.CreateIterator(); It; It++)
+		{
+			if ((*It) && (*It)->GetPickupTexture() && (*It)->GetPickupTexture()->HasSameSourceArt(Texture))
+			{
+				CurrentlyEquippedItem = *It;
+				GLog->Log("I've set a new equipped item: " + CurrentlyEquippedItem->GetName());
+				break;
+			}
+		}
+	}
+	else GLog->Log("The Player has clicked an empty inventory slot");
+}
+
+void AMannequin::DropEquippedItem()
+{
+	if (CurrentlyEquippedItem)
+	{
+		int32 IndexOfItem;
+		if (Inventory.Find(CurrentlyEquippedItem, IndexOfItem))
+		{
+			//Location of drop
+			FVector DropLocation = GetActorLocation() + (GetActorForwardVector() * 200);
+
+			//Making a transform with default rotation and scale
+			FTransform Transform; Transform.SetLocation(DropLocation);
+
+			//Default actor spawn parameters
+			FActorSpawnParameters SpawnParams;
+
+			//Spawning our pickup
+			APickup* PickupToSpawn = GetWorld()->SpawnActor<APickup>(CurrentlyEquippedItem->GetClass(), Transform, SpawnParams);
+
+			if (PickupToSpawn)
+			{
+				//Unreference item we've dropped
+				Inventory[IndexOfItem] = nullptr;
+			}
+		}
 	}
 }

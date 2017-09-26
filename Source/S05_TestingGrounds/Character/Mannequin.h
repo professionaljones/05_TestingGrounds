@@ -52,6 +52,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 		void PickupItem();
 
+	TArray<APickup*> GetInventory() { return Inventory; }
+
+	void SetEquippedItem(UTexture2D* Texture);
+
 private:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -70,10 +74,18 @@ private:
 	/*Reference to the last seen pickup item. Nullptr if none*/
 	APickup* LastItemSeen;
 
-	
+	UFUNCTION()
+		void HandleInventoryInput();
 
 	//Actual Inventory
 	UPROPERTY(VisibleAnywhere)
 		TArray<APickup*> Inventory;
+
+	//Reference currently equipped item
+	APickup* CurrentlyEquippedItem;
+
+	//Drop currently equipped item
+	UFUNCTION()
+		void DropEquippedItem();
 
 };
