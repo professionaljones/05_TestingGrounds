@@ -1,15 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+
 #include "Pickup.h"
 #include "GameFramework/Character.h"
 #include "Mannequin.generated.h"
+
+
 
 UCLASS()
 class S05_TESTINGGROUNDS_API AMannequin : public ACharacter
 {
 	GENERATED_BODY()
 
+#define MAX_INVENTORY_ITEMS 4
 public:
 	// Sets default values for this character's properties
 	AMannequin();
@@ -20,6 +24,8 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 		float RaycastRange = 250.0f;
+
+	
 
 public:
 	// Called every frame
@@ -33,11 +39,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
 	TSubclassOf<class AGun> GunBlueprint;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Setup")
+		TSubclassOf<class AGun> Pistol;
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void PullTrigger();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void ReloadWeapon();
+
+	//Handles the Pickup Input
+	UFUNCTION(BlueprintCallable, Category = "Setup")
+		void PickupItem();
 
 private:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
@@ -56,5 +69,11 @@ private:
 
 	/*Reference to the last seen pickup item. Nullptr if none*/
 	APickup* LastItemSeen;
+
+	
+
+	//Actual Inventory
+	UPROPERTY(VisibleAnywhere)
+		TArray<APickup*> Inventory;
 
 };

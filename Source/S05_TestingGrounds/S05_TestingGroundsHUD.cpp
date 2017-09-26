@@ -33,3 +33,29 @@ void AS05_TestingGroundsHUD::DrawHUD()
 	Canvas->DrawItem( TileItem );
 }
 
+FVector2D AS05_TestingGroundsHUD::GetRadarCenterPosition()
+{
+	//If the canvas is valid, return the center as a 2d vector
+	return (Canvas) ? FVector2D(Canvas->SizeX*RadarStartLocation.X, Canvas->SizeY*RadarStartLocation.Y) : FVector2D(0, 0);
+}
+
+void AS05_TestingGroundsHUD::DrawRadar()
+{
+	FVector2D RadarCenter = GetRadarCenterPosition();
+
+	for (float i = 0; i < 360; i += DegreeStep)
+	{
+		//We want to draw a circle in order to represent our radar
+		//In order to do so, we calculate the sin and cos of almost every degree
+		//It it impossible to calculate each and every possible degree because they are infinite
+		//Lower the degree step in case you need a more accurate circle representation
+
+		//We multiply our coordinates by radar size 
+		//in order to draw a circle with radius equal to the one we will input through the editor
+		float fixedX = FMath::Cos(i) * RadarRadius;
+		float fixedY = FMath::Sin(i) * RadarRadius;
+
+		//Actual draw
+		DrawLine(RadarCenter.X, RadarCenter.Y, RadarCenter.X + fixedX, RadarCenter.Y + fixedY, FLinearColor::Gray, 1.f);
+	}
+}

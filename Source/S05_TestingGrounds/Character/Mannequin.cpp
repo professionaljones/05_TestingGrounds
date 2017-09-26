@@ -37,6 +37,7 @@ void AMannequin::BeginPlay()
 	}
 
 	Gun = GetWorld()->SpawnActor<AGun>(GunBlueprint);
+	
 
 	//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
 	if (IsPlayerControlled()) {
@@ -48,17 +49,25 @@ void AMannequin::BeginPlay()
 
 	Gun->AnimInstance1P = Mesh1P->GetAnimInstance();
 	Gun->AnimInstance3P = GetMesh()->GetAnimInstance();
+	
 
 	if (InputComponent != nullptr) {
 		InputComponent->BindAction("Fire", IE_Pressed, this, &AMannequin::PullTrigger);
 		InputComponent->BindAction("Reload", IE_Pressed, this, &AMannequin::ReloadWeapon);
+		InputComponent->BindAction("Activate", IE_Pressed, this, &AMannequin::PickupItem);
 	}
+
+	//Initializing our reference
+	LastItemSeen = nullptr;
+
+	Inventory.SetNum(MAX_INVENTORY_ITEMS);
 }
 
 // Called every frame
 void AMannequin::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	Raycast();
 
 }
 
@@ -66,6 +75,8 @@ void AMannequin::Tick(float DeltaTime)
 void AMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	
 }
 
 void AMannequin::UnPossessed() {
@@ -81,4 +92,56 @@ void AMannequin::PullTrigger()
 void AMannequin::ReloadWeapon()
 {
 	Gun->OnReload();
+}
+
+void AMannequin::Raycast()
+{
+	//Calculating start and end location
+	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+	FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * RaycastRange);
+
+	FHitResult RaycastHit;
+
+	//Raycast should ignore the character
+	FCollisionQueryParams CQP;
+	CQP.AddIgnoredActor(this);
+
+	//Raycast
+	GetWorld()->LineTraceSingleByChannel(RaycastHit, StartLocation, EndLocation, ECollisionChannel::ECC_WorldDynamic, CQP);
+
+
+	APickup* Pickup = Cast<APickup>(RaycastHit.GetActor());
+
+	if (LastItemSeen && LastItemSeen != Pickup)
+	{
+		//If our character sees a different pickup then disable the glowing effect on the previous seen item
+		LastItemSeen->SetGlowEffect(false);
+	}
+
+	if (Pickup)
+	{
+		//Enable the glow effect on the current item
+		LastItemSeen = Pickup;
+		Pickup->SetGlowEffect(true);
+	}//Re-Initialize 
+	else LastItemSeen = nullptr;
+
+}
+
+void AMannequin::PickupItem()
+{
+	if (LastItemSeen)
+	{
+		//Find the first available slot
+		int32 AvailableSlot = Inventory.Find(nullptr);
+
+		if (AvailableSlot != INDEX_NONE)
+		{
+			//Add the item to the first valid slot we found
+			Inventory[AvailableSlot] = LastItemSeen;
+			//Destroy the item from the game
+			LastItemSeen->Destroy();
+		}
+		else GLog->Log("You can't carry any more items!");
+	}
 }

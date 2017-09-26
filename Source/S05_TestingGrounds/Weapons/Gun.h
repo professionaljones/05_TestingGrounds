@@ -5,10 +5,21 @@
 #include "GameFramework/Actor.h"
 #include "Gun.generated.h"
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	WT_Primary UMETA(DisplayName="Primary"),
+	WT_Secondary UMETA(DisplayName="Secondary"),
+	WT_Power UMETA(DisplayName="Power")
+};
+
 UCLASS()
 class S05_TESTINGGROUNDS_API AGun : public AActor
 {
 	GENERATED_BODY()
+
+		UPROPERTY(EditAnywhere, Category = Enum)
+		EWeaponType WeaponType;
 
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -31,6 +42,23 @@ public:
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	TSubclassOf<class ABallProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere)
+		int CurrentAmmoInMag;
+
+	UPROPERTY(EditAnywhere)
+		int MaxAmmoInMag;
+
+	UPROPERTY(EditAnywhere)
+		int CurrentAmmoinInventory;
+
+	UPROPERTY(EditAnywhere)
+		int MaxAmmoInInventory;
+
+	UPROPERTY(EditAnywhere)
+		float ReloadTime;
+
+	
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
